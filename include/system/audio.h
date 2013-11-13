@@ -70,6 +70,7 @@ typedef enum {
                                           /* An example of remote presentation is Wifi Display */
                                           /*  where a dongle attached to a TV can be used to   */
                                           /*  play the mix captured by this audio source.      */
+    AUDIO_SOURCE_RECORD_NO_AUDIO     = 9, /* SPRD: add one audioSource type for slow motion */
     AUDIO_SOURCE_CNT,
     AUDIO_SOURCE_MAX                 = AUDIO_SOURCE_CNT - 1,
     AUDIO_SOURCE_HOTWORD             = 1999, /* A low-priority, preemptible audio source for
@@ -309,6 +310,10 @@ enum {
     AUDIO_DEVICE_OUT_USB_ACCESSORY             = 0x2000,
     AUDIO_DEVICE_OUT_USB_DEVICE                = 0x4000,
     AUDIO_DEVICE_OUT_REMOTE_SUBMIX             = 0x8000,
+    // modified for FM start
+    AUDIO_DEVICE_OUT_FM_HEADSET                = 0x1000000,
+    AUDIO_DEVICE_OUT_FM_SPEAKER                = 0x2000000,
+    // modified for FM end
     AUDIO_DEVICE_OUT_DEFAULT                   = AUDIO_DEVICE_BIT_DEFAULT,
     AUDIO_DEVICE_OUT_ALL      = (AUDIO_DEVICE_OUT_EARPIECE |
                                  AUDIO_DEVICE_OUT_SPEAKER |
@@ -326,6 +331,8 @@ enum {
                                  AUDIO_DEVICE_OUT_USB_ACCESSORY |
                                  AUDIO_DEVICE_OUT_USB_DEVICE |
                                  AUDIO_DEVICE_OUT_REMOTE_SUBMIX |
+                                 AUDIO_DEVICE_OUT_FM_HEADSET |
+                                 AUDIO_DEVICE_OUT_FM_SPEAKER |
                                  AUDIO_DEVICE_OUT_DEFAULT),
     AUDIO_DEVICE_OUT_ALL_A2DP = (AUDIO_DEVICE_OUT_BLUETOOTH_A2DP |
                                  AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES |
@@ -335,6 +342,10 @@ enum {
                                  AUDIO_DEVICE_OUT_BLUETOOTH_SCO_CARKIT),
     AUDIO_DEVICE_OUT_ALL_USB  = (AUDIO_DEVICE_OUT_USB_ACCESSORY |
                                  AUDIO_DEVICE_OUT_USB_DEVICE),
+    // modified for FM start
+    AUDIO_DEVICE_OUT_ALL_FM   = (AUDIO_DEVICE_OUT_FM_HEADSET |
+                                 AUDIO_DEVICE_OUT_FM_SPEAKER),
+    // modified for FM end
 
     /* input devices */
     AUDIO_DEVICE_IN_COMMUNICATION         = AUDIO_DEVICE_BIT_IN | 0x1,

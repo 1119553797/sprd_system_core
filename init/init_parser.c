@@ -132,6 +132,7 @@ int lookup_keyword(const char *s)
         break;
     case 'p':
         if (!strcmp(s, "owerctl")) return K_powerctl;
+        if (!strcmp(s, "ipe")) return K_pipe;   //sprd add for loopback test
     case 'r':
         if (!strcmp(s, "estart")) return K_restart;
         if (!strcmp(s, "estorecon")) return K_restorecon;

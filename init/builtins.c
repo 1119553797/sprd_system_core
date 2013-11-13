@@ -858,3 +858,13 @@ int do_wait(int nargs, char **args)
     } else
         return -1;
 }
+
+int do_pipe(int nargs, char **args) {
+    mode_t mode = get_mode(args[1]);
+    if (mkfifo(args[2], mode) < 0) {
+	ERROR("peter do pipe error haha\n");
+        return -errno;
+    }
+    return 0;
+
+}
