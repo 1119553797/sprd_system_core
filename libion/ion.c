@@ -32,7 +32,7 @@
 
 int ion_open()
 {
-        int fd = open("/dev/ion", O_RDONLY);
+        int fd = open("/dev/ion", O_RDWR);
         if (fd < 0)
                 ALOGE("open /dev/ion failed!\n");
         return fd;
