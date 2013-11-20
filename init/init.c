@@ -1055,6 +1055,9 @@ int main(int argc, char **argv)
         action_for_each_trigger("post-fs", action_add_queue_tail);
         action_for_each_trigger("post-fs-data", action_add_queue_tail);
     }
+	if (!strcmp(bootmode, "cali")) {
+		action_for_each_trigger("cali", action_add_queue_tail);
+	}
 
     /* Repeat mix_hwrng_into_linux_rng in case /dev/hw_random or /dev/random
      * wasn't ready immediately after wait_for_coldboot_done
