@@ -464,6 +464,9 @@ static int do_server() {
 
     LOG("debuggerd: " __DATE__ " " __TIME__ "\n");
 
+    //check corefile limit.
+    (void)check_corefile_limit();
+
     for(;;) {
         struct sockaddr addr;
         socklen_t alen;

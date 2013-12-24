@@ -807,6 +807,87 @@ static int activity_manager_connect() {
     return amfd;
 }
 
+//check and set limit corefile limit to 4:
+#define MAX_COREFILE_SUPPORT   3
+int check_corefile_limit(void)
+{
+    DIR *d;
+    struct dirent *de;
+    int corecount;
+    d = opendir("/data/corefile");
+
+    if (d == NULL)
+    {
+        return 1; //open dir filed ,so did not creat maps file.
+    }
+    corecount = 0;
+    while ((de = readdir(d)) != NULL)
+    {
+        /* Ignore "." and ".." */
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+        {
+            continue;
+        }
+
+        if( !strncmp(de->d_name, "core", 4))    //only match core-xx
+        {
+            corecount ++;
+        }
+    }
+    closedir(d);
+
+    //disable coredump
+    if(corecount > MAX_COREFILE_SUPPORT)
+    {
+        //only set to /dev/null.user build did not open core .
+        system("echo /dev/null > /proc/sys/kernel/core_pattern");
+        return 1;
+    }
+    return 0;
+}
+
+//add for dump map file
+void dump_creash_maps(unsigned pid)
+{
+    char data[1024];
+    char desfilename[32];
+    int  handler_des;
+    int  ret;
+    FILE *fp_maps = NULL;
+
+    if(1 == check_corefile_limit())
+    {
+        return ;
+    }
+
+    sprintf(data, "/proc/%d/maps", pid);
+    //save maps file to: tombstones/
+    sprintf(desfilename,"/data/corefile/maps_%d",pid);
+
+    //cp file to maps file.
+    fp_maps = fopen(data, "r");
+    if(fp_maps == NULL) {
+        return;
+    }
+
+    handler_des = open(desfilename, O_CREAT | O_EXCL | O_WRONLY, 0666);
+
+    if(handler_des < 0) {
+        fclose(fp_maps);
+        return;
+    }
+    fchown(handler_des, AID_SYSTEM, AID_SYSTEM);
+
+    while((ret = fread(data,1, 1024,fp_maps)) > 0)
+    {
+        write(handler_des, data, ret);
+    }
+    fclose(fp_maps);
+    close(handler_des);
+    return;
+}
+
+
 char* engrave_tombstone(pid_t pid, pid_t tid, int signal, uintptr_t abort_msg_address,
         bool dump_sibling_threads, bool quiet, bool* detach_failed,
         int* total_sleep_time_usec) {
@@ -817,6 +898,9 @@ char* engrave_tombstone(pid_t pid, pid_t tid, int signal, uintptr_t abort_msg_ad
         *detach_failed = false;
         return NULL;
     }
+
+    //dump maps & check corefile limit .
+    dump_creash_maps(pid);  //creat maps file
 
     int fd;
     char* path = find_and_open_tombstone(&fd);
