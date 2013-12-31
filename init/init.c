@@ -1069,6 +1069,8 @@ int main(int argc, char **argv)
     queue_builtin_action(check_startup_action, "check_startup");
 
     if (is_charger) {
+        action_for_each_trigger("early-fs", action_add_queue_tail);
+        action_for_each_trigger("fs", action_add_queue_tail);
         action_for_each_trigger("charger", action_add_queue_tail);
     } else {
         action_for_each_trigger("early-boot", action_add_queue_tail);
