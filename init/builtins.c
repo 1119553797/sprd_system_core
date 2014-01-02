@@ -48,7 +48,8 @@
 #include "log.h"
 
 #include <private/android_filesystem_config.h>
-
+#include <sys/ioctl.h>
+#include "ubi-user.h"
 void add_environment(const char *name, const char *value);
 
 extern int init_module(void *, unsigned long, const char *);
@@ -333,7 +334,33 @@ int do_mkdir(int nargs, char **args)
 
     return 0;
 }
+#define UBI_CTRL_DEV "/dev/ubi_ctrl"
+int do_ubiAttach(int nargs, char **args)
+{
+    struct ubi_attach_req req;
+    int fd;
+    int ret;
 
+    ERROR("do_ubiAttach %s %s\n",args[1],args[2]);
+
+    memset(&req, 0, sizeof(struct ubi_attach_req));
+    req.ubi_num =(typeof(req.ubi_num))atoi(args[1]);
+    if(-1 == req.ubi_num){
+        req.ubi_num = UBI_DEV_NUM_AUTO;
+    }
+    req.mtd_num = (typeof(req.mtd_num))mtd_name_to_number( args[2]);
+
+    fd = open(UBI_CTRL_DEV, O_RDONLY);
+    if(-1 == fd){
+        return -1;
+    }
+    ret = ioctl(fd, UBI_IOCATT, &req);
+    close(fd);
+    if(-1 == ret){
+        return -1;
+    }
+    return 0;
+}
 static struct {
     const char *name;
     unsigned flag;
