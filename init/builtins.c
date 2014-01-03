@@ -485,6 +485,93 @@ exit_success:
 
 }
 
+/* SPRD: add for storage manage  @{ */
+
+#define PROC_MOUNTS_FILENAME   "/proc/mounts"
+
+static int enusure_data_mounted()
+{
+    char buf[2048];
+    const char *bufp;
+    int fd;
+    ssize_t nbytes;
+    int res = -1;
+
+    /* Open and read the file contents.
+     */
+    fd = open(PROC_MOUNTS_FILENAME, O_RDONLY);
+    if (fd < 0) {
+        goto bail;
+    }
+    nbytes = read(fd, buf, sizeof(buf) - 1);
+    close(fd);
+    if (nbytes < 0) {
+        goto bail;
+    }
+    buf[nbytes] = '\0';
+
+    /* Parse the contents of the file, which looks like:
+     *
+     *     # cat /proc/mounts
+     *     rootfs / rootfs rw 0 0
+     *     /dev/pts /dev/pts devpts rw 0 0
+     *     /proc /proc proc rw 0 0
+     *     /sys /sys sysfs rw 0 0
+     *     /dev/block/mtdblock4 /system yaffs2 rw,nodev,noatime,nodiratime 0 0
+     *     /dev/block/mtdblock5 /data yaffs2 rw,nodev,noatime,nodiratime 0 0
+     *     /dev/block/mmcblk0p1 /sdcard vfat rw,sync,dirsync,fmask=0000,dmask=0000,codepage=cp437,iocharset=iso8859-1,utf8 0 0
+     *
+     * The zeroes at the end are dummy placeholder fields to make the
+     * output match Linux's /etc/mtab, but don't represent anything here.
+     */
+    bufp = buf;
+    while (nbytes > 0) {
+        char device[64];
+        char mount_point[64];
+        char filesystem[64];
+        char flags[128];
+        int matches;
+
+        /* %as is a gnu extension that malloc()s a string for each field.
+         */
+        matches = sscanf(bufp, "%63s %63s %63s %127s",
+                         device, mount_point, filesystem, flags);
+
+        if (matches == 4) {
+            device[sizeof(device)-1] = '\0';
+            mount_point[sizeof(mount_point)-1] = '\0';
+            filesystem[sizeof(filesystem)-1] = '\0';
+            flags[sizeof(flags)-1] = '\0';
+
+            if (!strncmp(mount_point, DATA_MNT_POINT, sizeof(DATA_MNT_POINT))) {
+                res = 0;
+                ERROR("/data mounted\n");
+                break;
+            }
+        } else {
+            ERROR("matches was %d on <<%.40s>>\n", matches, bufp);
+        }
+
+        /* Eat the line.
+         */
+        while (nbytes > 0 && *bufp != '\n') {
+            bufp++;
+            nbytes--;
+        }
+        if (nbytes > 0) {
+            bufp++;
+            nbytes--;
+        }
+    }
+
+    return res;
+
+bail:
+//TODO: free the strings we've allocated.
+    return res;
+}
+/* @} */
+
 int do_mount_all(int nargs, char **args)
 {
     pid_t pid;
@@ -532,12 +619,19 @@ int do_mount_all(int nargs, char **args)
     if (ret == 1) {
         property_set("ro.crypto.state", "encrypted");
         property_set("vold.decrypt", "1");
+/* SPRD: modify for storage manage  @{
+  @orig
     } else if (ret == 0) {
+ */
+    } else {
+        if (ret == 0 || !enusure_data_mounted()) {
+/* @} */
         property_set("ro.crypto.state", "unencrypted");
         /* If fs_mgr determined this is an unencrypted device, then trigger
          * that action.
          */
         action_for_each_trigger("nonencrypted", action_add_queue_tail);
+        }
     }
 
     return ret;
