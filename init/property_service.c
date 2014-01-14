@@ -90,6 +90,7 @@ struct {
     { "service.adb.root", AID_SHELL,    0 },
     { "service.adb.tcp.port", AID_SHELL,    0 },
     { "persist.sys.",     AID_SYSTEM,   0 },
+    { "persist.msms.",    AID_RADIO,   0 },//SPRD: add for dsds
     { "persist.service.", AID_SYSTEM,   0 },
     { "persist.security.", AID_SYSTEM,   0 },
     { "media.", AID_MEDIA,   0 },
