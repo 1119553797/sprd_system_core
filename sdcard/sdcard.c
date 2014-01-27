@@ -157,6 +157,7 @@ struct handle {
 
 struct dirhandle {
     DIR *d;
+    perm_t p; // SPRD: add for CTS
 };
 
 struct node {
@@ -1350,6 +1351,7 @@ static int handle_opendir(struct fuse* fuse, struct fuse_handler* handler,
         free(h);
         return -errno;
     }
+    h->p = node->perm;   // SPRD: add for CTS
     out.fh = ptr_to_id(h);
     out.open_flags = 0;
     out.padding = 0;
@@ -1371,10 +1373,20 @@ static int handle_readdir(struct fuse* fuse, struct fuse_handler* handler,
         TRACE("[%d] calling rewinddir()\n", handler->token);
         rewinddir(h->d);
     }
+next:  // SPRD: add for CTS
     de = readdir(h->d);
     if (!de) {
         return 0;
     }
+    /* SPRD: add for CTS @{ */
+    if (h->p == PERM_ROOT) {
+        if (!strcasecmp(de->d_name, "autorun.inf")
+                || !strcasecmp(de->d_name, ".android_secure")
+                || !strcasecmp(de->d_name, "android_secure")) {
+            goto next;
+        }
+    }
+    /* @} */
     fde->ino = FUSE_UNKNOWN_INO;
     /* increment the offset so we can detect when rewinddir() seeks back to the beginning */
     fde->off = req->offset + 1;
